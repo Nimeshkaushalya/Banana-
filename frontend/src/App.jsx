@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Home from './components/Home';
 import Login from './components/Login';
@@ -19,7 +19,7 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   // Function to fetch fresh user data
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     const token = localStorage.getItem('token');
     if (!token) {
       setLoading(false);
@@ -45,7 +45,7 @@ function App() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // No dependencies needed
 
   // Initial load
   useEffect(() => {
@@ -83,10 +83,10 @@ function App() {
   };
 
   // Function to update user stats after a game
-  const updateUserStats = async () => {
+  const updateUserStats = useCallback(async () => {
     console.log('Updating user stats...'); // Debug log
     await fetchUserData();
-  };
+  }, []); // Empty dependencies - function doesn't need to be recreated
 
   if (loading) {
     return (

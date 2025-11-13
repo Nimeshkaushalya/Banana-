@@ -329,13 +329,14 @@ function Home({ user, onLogout, updateUserStats }) {
   const [hoveredInfo, setHoveredInfo] = React.useState(null);
   const [hoveredSocial, setHoveredSocial] = React.useState(null);
 
-  // Update user stats when component mounts
+  // Update user stats when component mounts (only once)
   useEffect(() => {
     console.log('Home component user data:', user); // Debug log
     if (updateUserStats) {
       updateUserStats();
     }
-  }, [updateUserStats]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array = run only once on mount
 
   // Log user changes
   useEffect(() => {
