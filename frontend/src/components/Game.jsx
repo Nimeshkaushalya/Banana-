@@ -431,7 +431,7 @@ function Game({ user }) {
           <div style={styles.stat}><div style={styles.statLabel}>Level</div><div style={styles.statValue}>{level}</div></div>
           <div style={styles.stat}><div style={styles.statLabel}>Bananas</div><div style={styles.statValue}>🍌 {bananasCollected}</div></div>
           <div style={styles.stat}><div style={styles.statLabel}>Time</div><div style={styles.statValue}>{formatTime(gameTime)}</div></div>
-          <div style={styles.stat}><div style={styles.statLabel}>Lives</div><div style={styles.lives}>{'❤️'.repeat(Math.max(0, lives))}{'🖤'.repeat(Math.max(0, 5 - lives))}</div></div>
+          <div style={styles.stat}><div style={styles.statLabel}>Lives</div><div style={styles.lives}>{'❤️'.repeat(Math.max(0, lives))}{'🖤'.repeat(Math.max(0, 3 - lives))}</div></div>
         </div>
         <button style={{ ...styles.gameButton, ...styles.yellowButton }} onClick={() => setIsPaused(!isPaused)} onMouseEnter={(e) => handleButtonHover(e, true)} onMouseLeave={(e) => handleButtonHover(e, false)} onMouseDown={(e) => handleButtonPress(e, true, '#F7C00D')} onMouseUp={(e) => handleButtonPress(e, false, '#F7C00D')}>
           {isPaused ? '▶️' : '⏸️'}<span>{isPaused ? 'Resume' : 'Pause'}</span>
