@@ -1,7 +1,6 @@
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-const BANANA_API = process.env.REACT_APP_BANANA_API || 'https://marcconrad.com/uob/banana/';
 
 // Create axios instance
 const api = axios.create({
@@ -66,20 +65,49 @@ export const scoresAPI = {
   },
 };
 
-// Banana Math API
+// Banana Math API - Using Backend Proxy (No CORS Issues!)
 export const bananaAPI = {
   getQuestion: async () => {
     try {
-      const response = await axios.get(`${BANANA_API}?task=math`, {
-        params: {
-          // Add timestamp to prevent caching
-          _t: new Date().getTime()
-        }
-      });
-      return response.data;
+      console.log('🍌 Requesting banana question from backend...');
+      
+      // Use backend proxy to avoid CORS issues
+      const response = await api.get('/banana/question');
+      
+      console.log('✅ Banana question received:', response.data);
+      
+      // Validate response
+      if (!response.data || !response.data.question || typeof response.data.solution !== 'number') {
+        throw new Error('Invalid response format from banana API');
+      }
+      
+      return {
+        question: response.data.question,
+        solution: response.data.solution
+      };
     } catch (error) {
-      console.error('Error fetching banana question:', error);
-      throw error;
+      console.error('❌ Error fetching banana question:', error);
+      
+      // If backend proxy fails, try direct call as fallback (may have CORS issues)
+      console.log('⚠️ Trying direct API call as fallback...');
+      try {
+        const directResponse = await axios.get('https://marcconrad.com/uob/banana/api.php', {
+          params: {
+            task: 'math',
+            _t: new Date().getTime()
+          }
+        });
+        
+        console.log('✅ Direct API response:', directResponse.data);
+        
+        return {
+          question: directResponse.data.question,
+          solution: directResponse.data.solution
+        };
+      } catch (fallbackError) {
+        console.error('❌ Fallback also failed:', fallbackError);
+        throw error;
+      }
     }
   },
 };
