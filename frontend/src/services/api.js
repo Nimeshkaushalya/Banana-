@@ -13,6 +13,7 @@ const api = axios.create({
 // Add token to requests
 api.interceptors.request.use(
   (config) => {
+    // [AUTHENTICATION] Attach JWT token from LocalStorage to headers
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -30,12 +31,12 @@ export const authAPI = {
     const response = await api.post('/auth/register', userData);
     return response.data;
   },
-  
+
   login: async (credentials) => {
     const response = await api.post('/auth/login', credentials);
     return response.data;
   },
-  
+
   getMe: async () => {
     const response = await api.get('/auth/me');
     return response.data;
@@ -48,17 +49,17 @@ export const scoresAPI = {
     const response = await api.post('/scores', scoreData);
     return response.data;
   },
-  
+
   getLeaderboard: async (limit = 50, page = 1) => {
     const response = await api.get(`/scores/leaderboard?limit=${limit}&page=${page}`);
     return response.data;
   },
-  
+
   getUserScores: async (userId) => {
     const response = await api.get(`/scores/user/${userId}`);
     return response.data;
   },
-  
+
   getTopPlayers: async (limit = 10) => {
     const response = await api.get(`/scores/top-players?limit=${limit}`);
     return response.data;
@@ -70,25 +71,25 @@ export const bananaAPI = {
   getQuestion: async () => {
     try {
       console.log('🍌 Requesting banana question from backend...');
-      
-      // Use backend proxy to avoid CORS issues
+
+      // [INTEROPERABILITY] Fetch from backend proxy to avoid CORS
       const response = await api.get('/banana/question');
-      
+
       console.log('✅ Banana question received:', response.data);
-      
+
       // Validate response
       if (!response.data || !response.data.question || typeof response.data.solution !== 'number') {
         throw new Error('Invalid response format from banana API');
       }
-      
+
       return {
-        question: response.data.question,
-        solution: response.data.solution
+        question: response.data.data.question,
+        solution: response.data.data.solution
       };
     } catch (error) {
       console.error('❌ Error fetching banana question:', error);
-      
-      // If backend proxy fails, try direct call as fallback (may have CORS issues)
+
+      // Fallback: Try direct API call
       console.log('⚠️ Trying direct API call as fallback...');
       try {
         const directResponse = await axios.get('https://marcconrad.com/uob/banana/api.php', {
@@ -97,9 +98,9 @@ export const bananaAPI = {
             _t: new Date().getTime()
           }
         });
-        
+
         console.log('✅ Direct API response:', directResponse.data);
-        
+
         return {
           question: directResponse.data.question,
           solution: directResponse.data.solution

@@ -7,12 +7,8 @@ import Game from './components/Game';
 import Leaderboard from './components/Leaderboard';
 import { authAPI } from './services/api';
 
-const styles = {
-  app: {
-    minHeight: '100vh',
-    background: 'linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%)',
-  },
-};
+// Styles are now handled in index.css
+
 
 function App() {
   const [user, setUser] = useState(null);
@@ -20,6 +16,9 @@ function App() {
 
   // Function to fetch fresh user data
   const fetchUserData = useCallback(async () => {
+    // [EXPLAIN: VIRTUAL IDENTITY - SESSION MANAGEMENT] 
+    // We use LocalStorage to store the JWT (JSON Web Token).
+    // This token serves as the user's "virtual identity" proof for subsequent requests.
     const token = localStorage.getItem('token');
     if (!token) {
       setLoading(false);
@@ -50,7 +49,7 @@ function App() {
   // Initial load
   useEffect(() => {
     const token = localStorage.getItem('token');
-    
+
     if (token) {
       // First set user from localStorage for immediate display
       const userData = localStorage.getItem('user');
@@ -61,7 +60,7 @@ function App() {
           console.error('Error parsing user data:', error);
         }
       }
-      
+
       // Then fetch fresh data from server
       fetchUserData();
     } else {
@@ -72,12 +71,18 @@ function App() {
   const handleLogin = (userData, token) => {
     console.log('Login data received:', userData); // Debug log
     setUser(userData);
+    // [EXPLAIN: VIRTUAL IDENTITY - AUTHENTICATION]
+    // Upon successful login, we store the token to establish the session.
+    // This persists the user's identity across page reloads.
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));
   };
 
   const handleLogout = () => {
     setUser(null);
+    // [SESSION END]
+    // To "log out", we simply delete the token from LocalStorage.
+    // This destroys the user's session on the client side.
     localStorage.removeItem('token');
     localStorage.removeItem('user');
   };
@@ -90,11 +95,11 @@ function App() {
 
   if (loading) {
     return (
-      <div style={{
-        ...styles.app,
+      <div className="loading-container" style={{
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
+        minHeight: '100vh',
         fontSize: '24px',
         color: '#FFD700',
       }}>
@@ -105,55 +110,55 @@ function App() {
 
   return (
     <Router>
-      <div style={styles.app}>
+      <div className="app-content">
         <Routes>
-          <Route 
-            path="/" 
+          <Route
+            path="/"
             element={
               user ? (
                 <Home user={user} onLogout={handleLogout} updateUserStats={updateUserStats} />
               ) : (
                 <Navigate to="/login" replace />
               )
-            } 
+            }
           />
-          <Route 
-            path="/login" 
+          <Route
+            path="/login"
             element={
               user ? (
                 <Navigate to="/" replace />
               ) : (
                 <Login onLogin={handleLogin} />
               )
-            } 
+            }
           />
-          <Route 
-            path="/register" 
+          <Route
+            path="/register"
             element={
               user ? (
                 <Navigate to="/" replace />
               ) : (
                 <Register onRegister={handleLogin} />
               )
-            } 
+            }
           />
-          <Route 
-            path="/game" 
+          <Route
+            path="/game"
             element={
               user ? (
                 <Game user={user} updateUserStats={updateUserStats} />
               ) : (
                 <Navigate to="/login" replace />
               )
-            } 
+            }
           />
-          <Route 
-            path="/leaderboard" 
-            element={<Leaderboard user={user} />} 
+          <Route
+            path="/leaderboard"
+            element={<Leaderboard user={user} />}
           />
-          <Route 
-            path="*" 
-            element={<Navigate to="/" replace />} 
+          <Route
+            path="*"
+            element={<Navigate to="/" replace />}
           />
         </Routes>
       </div>

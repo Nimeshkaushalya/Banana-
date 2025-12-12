@@ -6,7 +6,7 @@ const styles = {
     minHeight: '100vh',
     display: 'flex',
     flexDirection: 'column',
-    background: 'linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%)',
+    // background: 'linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%)', // Removed to show global theme
     position: 'relative',
     overflow: 'hidden',
   },
@@ -355,11 +355,11 @@ function Home({ user, onLogout, updateUserStats }) {
     const baseStyle = buttonName === 'play' ? styles.playButton : styles.leaderboardButton;
     const hoverStyle = hoveredButton === buttonName ? {
       transform: 'translateY(-3px)',
-      boxShadow: buttonName === 'play' 
-        ? '0 8px 30px rgba(255, 215, 0, 0.6)' 
+      boxShadow: buttonName === 'play'
+        ? '0 8px 30px rgba(255, 215, 0, 0.6)'
         : '0 8px 30px rgba(255, 215, 0, 0.3)',
     } : {};
-    
+
     return {
       ...styles.button,
       ...baseStyle,
@@ -530,7 +530,7 @@ function Home({ user, onLogout, updateUserStats }) {
             <div style={styles.footerSection}>
               <h3 style={styles.footerTitle}>About Banana Catch</h3>
               <p style={styles.footerText}>
-                An exciting browser-based game where reflexes and concentration meet fun. 
+                An exciting browser-based game where reflexes and concentration meet fun.
                 Challenge yourself and compete with players worldwide!
               </p>
               <div style={styles.footerStats}>

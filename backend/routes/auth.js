@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcryptjs');
 const { body, validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { protect } = require('../middleware/auth');
 
-// Generate JWT Token
+// [VIRTUAL IDENTITY] Generate JWT containing user ID to maintain session state
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE,
@@ -35,9 +36,9 @@ router.post(
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ 
-        success: false, 
-        errors: errors.array() 
+      return res.status(400).json({
+        success: false,
+        errors: errors.array()
       });
     }
 
@@ -45,8 +46,8 @@ router.post(
 
     try {
       // Check if user already exists
-      const userExists = await User.findOne({ 
-        $or: [{ email }, { username }] 
+      const userExists = await User.findOne({
+        $or: [{ email }, { username }]
       });
 
       if (userExists) {
@@ -56,11 +57,14 @@ router.post(
         });
       }
 
-      // Create user
+      // [SECURITY] Hash password using bcrypt before saving to DB
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+
       const user = await User.create({
         username,
         email,
-        password,
+        password: hashedPassword, // Use the hashed password
       });
 
       // Create token
@@ -113,9 +117,9 @@ router.post(
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ 
-        success: false, 
-        errors: errors.array() 
+      return res.status(400).json({
+        success: false,
+        errors: errors.array()
       });
     }
 
@@ -181,7 +185,7 @@ router.post(
 router.get('/me', protect, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,

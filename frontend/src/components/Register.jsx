@@ -9,55 +9,57 @@ const styles = {
     justifyContent: 'center',
     alignItems: 'center',
     padding: '20px',
-    background: 'linear-gradient(135deg, #000000 0%, #1a1a1a 100%)',
+    // Background removed
   },
   card: {
-    background: '#FFFFFF',
+    background: 'rgba(0, 0, 0, 0.6)',
+    backdropFilter: 'blur(12px)',
     borderRadius: '20px',
-    padding: '40px',
-    boxShadow: '0 20px 60px rgba(255, 215, 0, 0.3)',
+    padding: '30px',
+    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
     maxWidth: '450px',
     width: '100%',
     animation: 'fadeIn 0.5s ease-in',
-    border: '3px solid #FFD700',
+    border: '1px solid rgba(255, 215, 0, 0.2)',
   },
   title: {
-    fontSize: '36px',
+    fontSize: '32px',
     fontWeight: 'bold',
-    color: '#000000',
-    marginBottom: '10px',
+    color: '#FFD700',
+    marginBottom: '5px',
     textAlign: 'center',
   },
   subtitle: {
     fontSize: '16px',
-    color: '#666666',
-    marginBottom: '30px',
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginBottom: '20px',
     textAlign: 'center',
   },
   formGroup: {
-    marginBottom: '20px',
+    marginBottom: '15px',
   },
   label: {
     display: 'block',
-    marginBottom: '8px',
-    color: '#000000',
+    marginBottom: '5px',
+    color: '#FFD700',
     fontWeight: '600',
     fontSize: '14px',
   },
   input: {
     width: '100%',
-    padding: '14px 16px',
-    border: '2px solid #CCCCCC',
+    padding: '12px 14px',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
     borderRadius: '10px',
     fontSize: '16px',
     transition: 'all 0.3s ease',
     outline: 'none',
-    backgroundColor: '#FFFFFF',
-    color: '#000000',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    color: '#FFFFFF',
   },
   inputFocus: {
-    border: '2px solid #FFD700',
-    boxShadow: '0 0 10px rgba(255, 215, 0, 0.3)',
+    border: '1px solid #FFD700',
+    boxShadow: '0 0 10px rgba(255, 215, 0, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   button: {
     width: '100%',
@@ -90,7 +92,7 @@ const styles = {
   footer: {
     marginTop: '20px',
     textAlign: 'center',
-    color: '#666666',
+    color: 'rgba(255, 255, 255, 0.6)',
     fontSize: '14px',
   },
   link: {
@@ -100,15 +102,27 @@ const styles = {
     transition: 'color 0.3s ease',
   },
   emoji: {
-    fontSize: '64px',
+    fontSize: '48px',
     textAlign: 'center',
-    marginBottom: '20px',
+    marginBottom: '15px',
     animation: 'bounce 2s ease-in-out infinite',
   },
   hint: {
     fontSize: '12px',
-    color: '#666666',
+    color: 'rgba(255, 255, 255, 0.6)',
     marginTop: '5px',
+  },
+  strengthMeter: {
+    height: '5px',
+    borderRadius: '3px',
+    marginTop: '8px',
+    transition: 'all 0.3s ease',
+  },
+  strengthText: {
+    fontSize: '12px',
+    marginTop: '4px',
+    textAlign: 'right',
+    fontWeight: 'bold',
   },
 };
 
@@ -119,6 +133,7 @@ function Register({ onRegister }) {
     password: '',
     confirmPassword: '',
   });
+  const [passwordStrength, setPasswordStrength] = useState(0);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [focusedInput, setFocusedInput] = useState('');
@@ -126,11 +141,40 @@ function Register({ onRegister }) {
   const navigate = useNavigate();
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: value,
     });
+
+    if (name === 'password') {
+      calculatePasswordStrength(value);
+    }
+
     setError('');
+  };
+
+  const calculatePasswordStrength = (password) => {
+    let strength = 0;
+    if (password.length >= 6) strength += 1;
+    if (password.length >= 10) strength += 1;
+    if (/[A-Z]/.test(password)) strength += 1;
+    if (/[0-9]/.test(password)) strength += 1;
+    if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+    setPasswordStrength(strength);
+  };
+
+  const getStrengthColor = () => {
+    if (passwordStrength <= 2) return '#FF4136'; // Red - Weak
+    if (passwordStrength <= 3) return '#FFDC00'; // Yellow - Medium
+    return '#2ECC40'; // Green - Strong
+  };
+
+  const getStrengthLabel = () => {
+    if (formData.password.length === 0) return '';
+    if (passwordStrength <= 2) return 'Weak';
+    if (passwordStrength <= 3) return 'Good';
+    return 'Strong';
   };
 
   const handleSubmit = async (e) => {
@@ -167,7 +211,7 @@ function Register({ onRegister }) {
       }
     } catch (err) {
       setError(
-        err.response?.data?.message || 
+        err.response?.data?.message ||
         err.response?.data?.errors?.[0]?.msg ||
         'Registration failed. Please try again.'
       );
@@ -244,6 +288,21 @@ function Register({ onRegister }) {
               required
             />
             <div style={styles.hint}>At least 6 characters</div>
+            {formData.password && (
+              <>
+                <div style={{
+                  ...styles.strengthMeter,
+                  width: `${(passwordStrength / 5) * 100}%`,
+                  backgroundColor: getStrengthColor(),
+                }} />
+                <div style={{
+                  ...styles.strengthText,
+                  color: getStrengthColor(),
+                }}>
+                  {getStrengthLabel()}
+                </div>
+              </>
+            )}
           </div>
 
           <div style={styles.formGroup}>
@@ -282,8 +341,8 @@ function Register({ onRegister }) {
 
         <div style={styles.footer}>
           Already have an account?{' '}
-          <Link 
-            to="/login" 
+          <Link
+            to="/login"
             style={styles.link}
             onMouseEnter={(e) => e.target.style.color = '#FFA500'}
             onMouseLeave={(e) => e.target.style.color = '#FFD700'}
