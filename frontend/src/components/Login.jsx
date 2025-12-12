@@ -9,28 +9,29 @@ const styles = {
     justifyContent: 'center',
     alignItems: 'center',
     padding: '20px',
-    background: 'linear-gradient(135deg, #000000 0%, #1a1a1a 100%)',
+    // Background removed to show global jungle theme
   },
   card: {
-    background: '#FFFFFF',
+    background: 'rgba(0, 0, 0, 0.6)',
+    backdropFilter: 'blur(12px)',
     borderRadius: '20px',
     padding: '40px',
-    boxShadow: '0 20px 60px rgba(255, 215, 0, 0.3)',
+    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
     maxWidth: '450px',
     width: '100%',
     animation: 'fadeIn 0.5s ease-in',
-    border: '3px solid #FFD700',
+    border: '1px solid rgba(255, 215, 0, 0.2)',
   },
   title: {
     fontSize: '36px',
     fontWeight: 'bold',
-    color: '#000000',
+    color: '#FFD700',
     marginBottom: '10px',
     textAlign: 'center',
   },
   subtitle: {
     fontSize: '16px',
-    color: '#666666',
+    color: 'rgba(255, 255, 255, 0.8)',
     marginBottom: '30px',
     textAlign: 'center',
   },
@@ -40,24 +41,25 @@ const styles = {
   label: {
     display: 'block',
     marginBottom: '8px',
-    color: '#000000',
+    color: '#FFD700',
     fontWeight: '600',
     fontSize: '14px',
   },
   input: {
     width: '100%',
     padding: '14px 16px',
-    border: '2px solid #CCCCCC',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
     borderRadius: '10px',
     fontSize: '16px',
     transition: 'all 0.3s ease',
     outline: 'none',
-    backgroundColor: '#FFFFFF',
-    color: '#000000',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    color: '#FFFFFF',
   },
   inputFocus: {
-    border: '2px solid #FFD700',
-    boxShadow: '0 0 10px rgba(255, 215, 0, 0.3)',
+    border: '1px solid #FFD700',
+    boxShadow: '0 0 10px rgba(255, 215, 0, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   button: {
     width: '100%',
@@ -90,7 +92,7 @@ const styles = {
   footer: {
     marginTop: '20px',
     textAlign: 'center',
-    color: '#666666',
+    color: 'rgba(255, 255, 255, 0.6)',
     fontSize: '14px',
   },
   link: {
@@ -100,7 +102,7 @@ const styles = {
     transition: 'color 0.3s ease',
   },
   emoji: {
-    fontSize: '64px',
+    fontSize: '48px',
     textAlign: 'center',
     marginBottom: '20px',
     animation: 'bounce 2s ease-in-out infinite',
@@ -133,14 +135,14 @@ function Login({ onLogin }) {
 
     try {
       const response = await authAPI.login(formData);
-      
+
       if (response.success) {
         onLogin(response.data, response.data.token);
         navigate('/');
       }
     } catch (err) {
       setError(
-        err.response?.data?.message || 
+        err.response?.data?.message ||
         'Login failed. Please check your credentials.'
       );
     } finally {
@@ -216,8 +218,8 @@ function Login({ onLogin }) {
 
         <div style={styles.footer}>
           Don't have an account?{' '}
-          <Link 
-            to="/register" 
+          <Link
+            to="/register"
             style={styles.link}
             onMouseEnter={(e) => e.target.style.color = '#FFA500'}
             onMouseLeave={(e) => e.target.style.color = '#FFD700'}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
 
 const styles = {
   overlay: {
@@ -7,7 +8,8 @@ const styles = {
     left: 0,
     right: 0,
     bottom: 0,
-    background: 'rgba(0, 0, 0, 0.95)',
+    background: 'rgba(0, 0, 0, 0.85)',
+    backdropFilter: 'blur(8px)',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
@@ -15,72 +17,87 @@ const styles = {
     animation: 'fadeIn 0.3s ease-in',
   },
   modal: {
-    background: '#FFFFFF',
-    borderRadius: '25px',
-    padding: '40px',
+    background: 'linear-gradient(145deg, rgba(30, 60, 0, 0.95), rgba(10, 20, 0, 0.98))',
+    borderRadius: '30px',
+    padding: '25px', // Reduced padding
     maxWidth: '550px',
     width: '90%',
-    boxShadow: '0 20px 60px rgba(255, 215, 0, 0.5)',
+    maxHeight: '90vh', // Limit height to 90% of viewport
+    overflowY: 'auto', // Allow scrolling if content is too tall
+    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.1)',
     animation: 'bounce 0.5s ease-out',
     textAlign: 'center',
-    border: '4px solid #FFD700',
+    border: '1px solid rgba(255, 215, 0, 0.3)',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
   },
   title: {
-    fontSize: '32px',
-    fontWeight: 'bold',
-    color: '#000000',
-    marginBottom: '10px',
+    fontSize: '28px', // Reduced font size
+    fontWeight: '900',
+    color: '#FFD700',
+    marginBottom: '5px',
+    textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+    letterSpacing: '1px',
+    marginTop: 0,
   },
   subtitle: {
-    fontSize: '18px',
-    color: '#666666',
-    marginBottom: '30px',
+    fontSize: '16px',
+    color: '#a0a0a0',
+    marginBottom: '15px',
+    fontWeight: '500',
   },
   imageContainer: {
-    marginBottom: '30px',
-    padding: '20px',
-    background: '#000000',
+    marginBottom: '15px',
+    marginTop: '10px',
+    padding: '5px',
+    background: 'rgba(0, 0, 0, 0.5)',
     borderRadius: '15px',
-    border: '3px solid #FFD700',
-    height: '350px',
+    border: '2px solid rgba(255, 215, 0, 0.2)',
+    width: 'auto', // Allow container to shrink to image width
+    maxWidth: '100%', // Prevent overflowing the modal
+    height: '30vh', // Fixed height relative to viewport
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
     position: 'relative',
+    overflow: 'hidden',
+    boxShadow: 'inset 0 0 20px rgba(0,0,0,0.5)',
   },
   image: {
-    maxWidth: '100%',
-    maxHeight: '310px',
-    width: 'auto',
-    height: 'auto',
+    height: '100%', // Match container height
+    width: 'auto', // Maintain aspect ratio
+    maxWidth: '100%', // Ensure it doesn't overflow container width
     objectFit: 'contain',
     borderRadius: '10px',
-    boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)',
+    filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.5))',
   },
   question: {
-    fontSize: '22px',
-    color: '#000000',
+    fontSize: '24px',
+    color: '#FFFFFF',
     marginBottom: '20px',
-    fontWeight: 'bold',
+    fontWeight: '700',
+    textShadow: '0 2px 4px rgba(0,0,0,0.5)',
   },
   input: {
     width: '100%',
-    padding: '18px',
-    fontSize: '28px',
-    border: '3px solid #CCCCCC',
-    borderRadius: '12px',
+    padding: '12px', // Reduced padding
+    fontSize: '20px', // Reduced font size
+    border: '2px solid rgba(255, 255, 255, 0.2)',
+    borderRadius: '15px',
     textAlign: 'center',
-    marginBottom: '20px',
+    marginBottom: '15px', // Reduced margin
     outline: 'none',
     transition: 'all 0.3s ease',
-    color: '#000000',
-    backgroundColor: '#FFFFFF',
+    color: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     fontWeight: 'bold',
+    fontFamily: "'Fredoka', sans-serif",
   },
   inputFocus: {
-    border: '3px solid #FFD700',
-    boxShadow: '0 0 15px rgba(255, 215, 0, 0.5)',
+    border: '2px solid #FFD700',
+    boxShadow: '0 0 20px rgba(255, 215, 0, 0.3)',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
   },
   buttonsContainer: {
     display: 'flex',
@@ -88,88 +105,91 @@ const styles = {
   },
   button: {
     flex: 1,
-    padding: '18px',
+    padding: '12px', // Reduced padding
     border: 'none',
-    borderRadius: '12px',
-    fontSize: '18px',
-    fontWeight: 'bold',
+    borderRadius: '50px',
+    fontSize: '16px', // Reduced font size
+    fontWeight: '800',
     cursor: 'pointer',
-    transition: 'all 0.3s ease',
+    transition: 'all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1)',
+    textTransform: 'uppercase',
+    letterSpacing: '1px',
+    fontFamily: "'Fredoka', sans-serif",
   },
   submitButton: {
-    background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
-    color: '#000000',
-    border: '3px solid #FFD700',
+    background: 'linear-gradient(to bottom, #4CAF50, #2E7D32)',
+    color: '#FFFFFF',
+    boxShadow: '0 6px 0 #1B5E20, 0 12px 20px rgba(0,0,0,0.3)',
+    textShadow: '0 2px 0 rgba(0,0,0,0.2)',
   },
   skipButton: {
-    background: '#000000',
-    color: '#FFD700',
-    border: '3px solid #FFD700',
+    background: 'transparent',
+    color: '#FF5252',
+    border: '2px solid #FF5252',
+    boxShadow: 'none',
   },
   loading: {
-    fontSize: '20px',
-    color: '#666666',
+    fontSize: '24px',
+    color: '#FFD700',
+    fontWeight: 'bold',
+    textShadow: '0 2px 4px rgba(0,0,0,0.5)',
   },
   timer: {
-    fontSize: '56px',
-    fontWeight: 'bold',
+    fontSize: '36px', // Reduced font size
+    fontWeight: '900',
     color: '#FFD700',
-    marginBottom: '20px',
+    marginBottom: '10px', // Reduced margin
     textShadow: '0 0 20px rgba(255, 215, 0, 0.5)',
     animation: 'pulse 1s ease-in-out infinite',
   },
   error: {
-    background: '#000000',
-    color: '#FFD700',
-    padding: '12px',
-    borderRadius: '8px',
+    background: 'rgba(255, 68, 68, 0.2)',
+    color: '#FF5252',
+    padding: '15px',
+    borderRadius: '12px',
     marginBottom: '20px',
     fontSize: '16px',
-    border: '2px solid #FFD700',
+    border: '1px solid #FF5252',
+    fontWeight: 'bold',
+  },
+  success: {
+    background: 'rgba(34, 139, 34, 0.2)',
+    color: '#4CAF50',
+    padding: '15px',
+    borderRadius: '12px',
+    marginBottom: '20px',
+    fontSize: '18px',
+    fontWeight: 'bold',
+    border: '1px solid #4CAF50',
   },
   imageLoader: {
     color: '#FFD700',
     fontSize: '18px',
+    fontWeight: '600',
   },
 };
 
-// Mock API that simulates the real CSV response format
-const mockBananaAPI = {
-  getQuestion: async () => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Simulate CSV response: "imageUrl,solution"
-    const csvResponse = 'https://www.sanfoh.com/uob/banana/data/tda960504e718609d6c2f28d7c2n54.png,4';
-    
-    // Parse CSV: split by comma
-    const [imageUrl, solutionStr] = csvResponse.split(',');
-    
-    return {
-      question: imageUrl.trim(),
-      solution: parseInt(solutionStr.trim(), 10)
-    };
-  }
-};
-
-function BananaMath({ onSuccess, onFailure, onSkip, bananaAPI }) {
-  const [question, setQuestion] = useState(null);
+function BananaMath({ onSuccess, onFailure, onSkip }) {
+  const [puzzle, setPuzzle] = useState(null);
   const [answer, setAnswer] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
   const [timeLeft, setTimeLeft] = useState(30);
   const [isFocused, setIsFocused] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
-  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const isMountedRef = useRef(true);
   const timerRef = useRef(null);
   const imageRetryCount = useRef(0);
+  const correctAnswerRef = useRef(null);
 
   useEffect(() => {
     isMountedRef.current = true;
-    loadQuestion();
-    
+    fetchPuzzle();
+
     return () => {
       isMountedRef.current = false;
       if (timerRef.current) {
@@ -179,11 +199,11 @@ function BananaMath({ onSuccess, onFailure, onSkip, bananaAPI }) {
   }, []);
 
   useEffect(() => {
-    if (loading || isSubmitting || imageLoading) return;
-    
+    if (loading || success || imageLoading || isSubmitting) return;
+
     if (timeLeft === 0) {
-      console.log('⏰ Time expired - calling onSkip');
-      handleSkip();
+      console.log('⏰ Time expired - ending game');
+      handleTimeOut();
       return;
     }
 
@@ -198,37 +218,49 @@ function BananaMath({ onSuccess, onFailure, onSkip, bananaAPI }) {
         clearTimeout(timerRef.current);
       }
     };
-  }, [timeLeft, loading, isSubmitting, imageLoading]);
+  }, [timeLeft, loading, success, imageLoading, isSubmitting]);
 
-  const loadQuestion = async () => {
-    console.log('🔄 Loading banana math question...');
+  const fetchPuzzle = async () => {
+    console.log('🔄 Fetching puzzle from API...');
     setLoading(true);
     setError('');
     setImageLoading(true);
     setImageError(false);
     imageRetryCount.current = 0;
-    
+
     try {
-      // Use the passed bananaAPI or fall back to mock
-      const api = bananaAPI || mockBananaAPI;
-      const data = await api.getQuestion();
-      
+      // [INTEROPERABILITY] Consume external Banana Math API via HTTP/HTTPS
+      const response = await axios.get('https://marcconrad.com/uob/banana/api.php');
+
       if (!isMountedRef.current) return;
-      
-      console.log('✅ Question loaded:', data);
-      
-      // Check if the question is a proper URL
-      if (!data.question || !data.question.startsWith('http')) {
-        throw new Error('Invalid question URL received from API');
+
+      console.log('✅ Raw API Response:', JSON.stringify(response.data, null, 2));
+
+      if (!response.data || !response.data.question || response.data.solution === undefined || response.data.solution === null) {
+        throw new Error('Invalid API response');
       }
-      
-      setQuestion(data);
+
+      const solutionValue = parseInt(response.data.solution, 10);
+
+      if (isNaN(solutionValue)) {
+        throw new Error('Solution is not a valid number');
+      }
+
+      console.log('✅ Correct answer from API:', solutionValue);
+
+      correctAnswerRef.current = solutionValue;
+
+      setPuzzle({
+        question: response.data.question,
+        solution: solutionValue
+      });
+
     } catch (err) {
-      console.error('❌ Failed to load question:', err);
-      
+      console.error('❌ Failed to fetch puzzle:', err);
+
       if (!isMountedRef.current) return;
-      
-      setError('Failed to load question. Ending game...');
+
+      setError('Failed to load puzzle. Ending game...');
       setTimeout(() => {
         if (isMountedRef.current) {
           onSkip();
@@ -249,65 +281,121 @@ function BananaMath({ onSuccess, onFailure, onSkip, bananaAPI }) {
 
   const handleImageError = (e) => {
     console.error('❌ Image failed to load, attempt:', imageRetryCount.current + 1);
-    
-    // Retry up to 3 times
+
     if (imageRetryCount.current < 3) {
       imageRetryCount.current++;
       console.log('🔄 Retrying image load...');
-      
-      // Force reload by adding timestamp
+
       const img = e.target;
       const currentSrc = img.src.split('?')[0];
       img.src = `${currentSrc}?t=${Date.now()}`;
     } else {
       setImageError(true);
       setImageLoading(false);
-      setError('Image failed to load after multiple attempts. You can still try to answer or skip.');
+      setError('Image failed to load. You can still try to answer or skip.');
     }
   };
 
-  const handleSubmit = async () => {
-    console.log('📝 Submitting answer:', answer);
-    
-    if (!answer.trim()) {
-      setError('Please enter an answer');
+  const handleTimeOut = () => {
+    console.log('💀 TIME OUT - GAME OVER');
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+    onFailure(); // Changed from onSkip() to onFailure()
+  };
+
+  const handleSubmit = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    if (success || isSubmitting) {
+      console.log('⚠️ Already processing, ignoring submission');
       return;
     }
 
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('📝 SUBMISSION STARTED');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+    setError('');
     setIsSubmitting(true);
+
+    if (!answer || answer.trim() === '') {
+      console.log('❌ Answer is empty');
+      setError('Please enter an answer');
+      setIsSubmitting(false);
+      return;
+    }
+
     const userAnswer = parseInt(answer.trim(), 10);
+    console.log('User answer (parsed):', userAnswer, '(type:', typeof userAnswer, ')');
 
     if (isNaN(userAnswer)) {
+      console.log('❌ User answer is not a valid number');
       setError('Please enter a valid number');
       setIsSubmitting(false);
       return;
     }
 
-    const correctAnswer = question.solution;
-    console.log(`User answer: ${userAnswer}, Correct answer: ${correctAnswer}`);
+    const correctAnswer = correctAnswerRef.current;
+    console.log('Correct answer:', correctAnswer, '(type:', typeof correctAnswer, ')');
 
-    await new Promise(resolve => setTimeout(resolve, 500));
+    if (correctAnswer === null || correctAnswer === undefined) {
+      console.log('❌ Correct answer not available');
+      setError('Puzzle data error. Please skip.');
+      setIsSubmitting(false);
+      return;
+    }
 
-    if (userAnswer === correctAnswer) {
-      console.log('✅ Correct answer! Calling onSuccess');
-      onSuccess();
+    console.log('Comparing:', userAnswer, '===', correctAnswer);
+    const isCorrect = (userAnswer === correctAnswer);
+    console.log('Result:', isCorrect ? '✅ CORRECT' : '❌ WRONG');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+    if (isCorrect) {
+      // ✅ CORRECT ANSWER - User continues playing
+      console.log('✅✅✅ CORRECT ANSWER! User continues game');
+      setSuccess(true);
+      setError('');
+
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+
+      setTimeout(() => {
+        if (isMountedRef.current) {
+          console.log('🎉 Calling onSuccess() - Continuing game');
+          onSuccess();
+        }
+      }, 1500);
+
     } else {
-      console.log('❌ Wrong answer! Calling onFailure');
-      onFailure();
+      // ❌ WRONG ANSWER - GAME OVER
+      console.log('❌❌❌ WRONG ANSWER! GAME OVER');
+      setError(`Wrong! The correct answer was ${correctAnswer}. Game Over!`);
+
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+
+      // Show error for 2 seconds, then end game
+      setTimeout(() => {
+        if (isMountedRef.current) {
+          console.log('💀💀💀 Calling onFailure() - ENDING GAME & SHOWING SCORECARD');
+          onFailure();
+        }
+      }, 2000);
     }
   };
 
   const handleSkip = () => {
-    console.log('⏭️ Skip called - ending game');
-    if (isMountedRef.current) {
-      onSkip();
+    console.log('⏭️ Skip button clicked - Going to homepage');
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
     }
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !isSubmitting && !imageLoading) {
-      handleSubmit();
-    }
+    onSkip(); // ✅ Call onSkip() to navigate home
   };
 
   if (loading) {
@@ -327,16 +415,20 @@ function BananaMath({ onSuccess, onFailure, onSkip, bananaAPI }) {
       <div style={styles.modal}>
         <h2 style={styles.title}>🧮 Banana Math Challenge!</h2>
         <p style={styles.subtitle}>
-          Solve this to earn an extra life!
+          {success ? 'Correct! Continuing...' : 'Solve this to continue playing!'}
         </p>
 
-        <div style={styles.timer}>⏱️ {timeLeft}s</div>
+        {!success && !isSubmitting && <div style={styles.timer}>⏱️ {timeLeft}s</div>}
 
-        {error && (
-          <div style={styles.error}>⚠️ {error}</div>
+        {error && <div style={styles.error}>⚠️ {error}</div>}
+
+        {success && (
+          <div style={styles.success}>
+            ✅ Correct! You can continue playing...
+          </div>
         )}
 
-        {question && (
+        {puzzle && !success && (
           <>
             <div style={styles.imageContainer}>
               {imageLoading && !imageError && (
@@ -344,24 +436,24 @@ function BananaMath({ onSuccess, onFailure, onSkip, bananaAPI }) {
                   🍌 Loading image...
                 </div>
               )}
-              
-              <img 
-                src={question.question}
+
+              <img
+                src={puzzle.question}
                 alt="Banana Math Question"
                 style={{
                   ...styles.image,
-                  display: (imageLoading || imageError) ? 'none' : 'block'
+                  display: (imageLoading || imageError) ? 'none' : 'block',
                 }}
                 onLoad={handleImageLoad}
                 onError={handleImageError}
               />
-              
+
               {imageError && (
                 <div style={{ color: '#FFD700', fontSize: '16px' }}>
-                  🖼️ Image couldn't be displayed<br/>
-                  <a 
-                    href={question.question} 
-                    target="_blank" 
+                  🖼️ Image couldn't be displayed<br />
+                  <a
+                    href={puzzle.question}
+                    target="_blank"
                     rel="noopener noreferrer"
                     style={{ color: '#FFD700', textDecoration: 'underline' }}
                   >
@@ -372,66 +464,87 @@ function BananaMath({ onSuccess, onFailure, onSkip, bananaAPI }) {
             </div>
 
             <p style={styles.question}>
-              🍌 What number is hidden in the image?
+              🍌 What number should replace the question mark?
             </p>
 
-            <input
-              type="number"
-              value={answer}
-              onChange={(e) => {
-                setAnswer(e.target.value);
-                if (error && error.includes('answer')) {
-                  setError('');
-                }
-              }}
-              onKeyPress={handleKeyPress}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-              style={{
-                ...styles.input,
-                ...(isFocused ? styles.inputFocus : {}),
-              }}
-              placeholder="Enter your answer"
-              autoFocus
-              disabled={isSubmitting}
-            />
-
-            <div style={styles.buttonsContainer}>
-              <button
-                style={styles.submitButton}
-                onClick={handleSubmit}
-                disabled={isSubmitting || imageLoading}
-                onMouseEnter={(e) => {
-                  if (!isSubmitting && !imageLoading) {
-                    e.target.style.transform = 'translateY(-2px)';
-                    e.target.style.boxShadow = '0 6px 20px rgba(255, 215, 0, 0.6)';
-                  }
+            <form onSubmit={handleSubmit}>
+              <input
+                type="number"
+                value={answer}
+                onChange={(e) => {
+                  setAnswer(e.target.value);
+                  if (error) setError('');
                 }}
-                onMouseLeave={(e) => {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = 'none';
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                style={{
+                  ...styles.input,
+                  ...(isFocused ? styles.inputFocus : {}),
                 }}
-              >
-                {isSubmitting ? '⏳ Checking...' : '✓ Submit'}
-              </button>
-              <button
-                style={styles.skipButton}
-                onClick={handleSkip}
+                placeholder="Enter your answer"
+                autoFocus
+                required
                 disabled={isSubmitting}
-                onMouseEnter={(e) => {
-                  if (!isSubmitting) {
-                    e.target.style.transform = 'translateY(-2px)';
-                    e.target.style.boxShadow = '0 6px 20px rgba(255, 215, 0, 0.4)';
+                onKeyDown={(e) => {
+                  if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                    e.preventDefault();
                   }
                 }}
-                onMouseLeave={(e) => {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = 'none';
-                }}
-              >
-                ✗ Skip (End Game)
-              </button>
-            </div>
+              />
+
+              <div style={{ fontSize: '14px', color: '#666', marginBottom: '20px' }}>
+                (Press <strong>Enter</strong> or click <strong>Submit</strong>)
+              </div>
+
+              <div style={styles.buttonsContainer}>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  style={{
+                    ...styles.button,
+                    ...styles.submitButton,
+                    opacity: isSubmitting ? 0.6 : 1,
+                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isSubmitting) {
+                      e.target.style.transform = 'translateY(-2px)';
+                      e.target.style.boxShadow = '0 6px 20px rgba(255, 215, 0, 0.6)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = 'translateY(0)';
+                    e.target.style.boxShadow = '0 4px 0 #006400';
+                  }}
+                >
+                  {isSubmitting ? '⏳ Checking...' : '✓ Submit Answer'}
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isSubmitting}
+                  style={{
+                    ...styles.button,
+                    ...styles.skipButton,
+                    opacity: isSubmitting ? 0.6 : 1,
+                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                  }}
+                  onClick={handleSkip}
+                  onMouseEnter={(e) => {
+                    if (!isSubmitting) {
+                      e.target.style.transform = 'translateY(-2px)';
+                      e.target.style.boxShadow = '0 6px 20px rgba(255, 215, 0, 0.4)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = 'translateY(0)';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                >
+                  ✗ Skip (End Game)
+                </button>
+              </div>
+            </form>
           </>
         )}
       </div>
@@ -441,12 +554,12 @@ function BananaMath({ onSuccess, onFailure, onSkip, bananaAPI }) {
           from { opacity: 0; }
           to { opacity: 1; }
         }
-        
+
         @keyframes bounce {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-10px); }
         }
-        
+
         @keyframes pulse {
           0%, 100% { transform: scale(1); }
           50% { transform: scale(1.05); }
